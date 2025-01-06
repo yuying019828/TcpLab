@@ -14,6 +14,10 @@ public class TCP_Sender extends TCP_Sender_ADT {
 	private TCP_PACKET tcpPack;	//待发送的TCP数据报
 	private volatile int flag = 0;
 	
+	//RDT 3.0:处理包丢失/出错的情况，加入计时器和重传任务
+	private UDT_Timer timer;
+	private UDT_RetransTask retransTask;
+	
 	/*构造函数*/
 	public TCP_Sender() {
 		super();	//调用超类构造函数
@@ -32,9 +36,16 @@ public class TCP_Sender extends TCP_Sender_ADT {
 		tcpH.setTh_sum(CheckSum.computeChkSum(tcpPack));
 		tcpPack.setTcpH(tcpH);
 		
+		//RDT 3.0
+		timer = new UDT_Timer();
+		retransTask = new UDT_RetransTask(client, tcpPack);
+		
+		//将计时器加入重传任务中，设置开始时间为1s之后，之后每隔1s执行一次
+		timer.schedule(retransTask, 1000, 1000);
+		
 		//发送TCP数据报
 		udt_send(tcpPack);
-		flag = 0;
+		flag = 0;//waitACK状态
 		
 		//发送完数据后，等待ACK报文
 		//waitACK();
@@ -45,7 +56,16 @@ public class TCP_Sender extends TCP_Sender_ADT {
 	//不可靠发送：将打包好的TCP数据报通过不可靠传输信道发送；仅需修改错误标志
 	public void udt_send(TCP_PACKET stcpPack) {
 		//设置错误控制标志
-		tcpH.setTh_eflag((byte)1);		
+		//0:可靠信道
+		//1：出错
+		//2：丢包
+		//3：延迟
+		//4：出错+丢包
+		//5：出错+延迟
+		//6：丢包+延迟
+		//7：出错+丢包+延迟
+		
+		tcpH.setTh_eflag((byte)4);		
 		//System.out.println("to send: "+stcpPack.getTcpH().getTh_seq());				
 		//发送数据报
 		client.send(stcpPack);
@@ -76,18 +96,27 @@ public class TCP_Sender extends TCP_Sender_ADT {
 //				
 //			}
 			//2.2
-			if (currentAck != tcpPack.getTcpH().getTh_seq())
-			{
-				System.out.println("Retransmit: "+tcpPack.getTcpH().getTh_seq());
-				udt_send(tcpPack);  // 重新发包
-				flag = 0; // 仍然是waitACK状态
-			}
-			else
+//			if (currentAck != tcpPack.getTcpH().getTh_seq())
+//			{
+//				System.out.println("Retransmit: "+tcpPack.getTcpH().getTh_seq());
+//				udt_send(tcpPack);  // 重新发包
+//				flag = 0; // 仍然是waitACK状态
+//			}
+//			else
+//			{
+//				System.out.println("Clear: "+tcpPack.getTcpH().getTh_seq());
+//				flag = 1;//状态切换为等待应用层调用
+//				//break;
+//			}
+			//3.0 收到正确ACK，该包计时器取消；否则重传任务自动重传该包
+			if (currentAck == tcpPack.getTcpH().getTh_seq())
 			{
 				System.out.println("Clear: "+tcpPack.getTcpH().getTh_seq());
+				timer.cancel();
 				flag = 1;//状态切换为等待应用层调用
 				//break;
 			}
+			
 		}
 	}
 

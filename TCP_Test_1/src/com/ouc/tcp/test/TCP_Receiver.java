@@ -52,17 +52,19 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 				except_sequence++;
 			}
 		}
-		else//数据包错误
-		{
-			System.out.println("Recieve Computed: "+CheckSum.computeChkSum(recvPack));
-			System.out.println("Recieved Packet"+recvPack.getTcpH().getTh_sum());
-			System.out.println("Problem: Packet Number: "+recvPack.getTcpH().getTh_seq()+" + InnerSeq:  "+except_sequence);
-			tcpH.setTh_ack(last_except_sequence);
-			ackPack = new TCP_PACKET(tcpH, tcpS, recvPack.getSourceAddr());
-			tcpH.setTh_sum(CheckSum.computeChkSum(ackPack));
-			//回复ACK报文段
-			reply(ackPack);
-		}
+		//数据包错误
+		//3.0:对于出错的数据包，接收方只需等待发送方启动重传任务再次发来数据包。
+//		else
+//		{
+//			System.out.println("Recieve Computed: "+CheckSum.computeChkSum(recvPack));
+//			System.out.println("Recieved Packet"+recvPack.getTcpH().getTh_sum());
+//			System.out.println("Problem: Packet Number: "+recvPack.getTcpH().getTh_seq()+" + InnerSeq:  "+except_sequence);
+//			tcpH.setTh_ack(last_except_sequence);//2.2取消NACK
+//			ackPack = new TCP_PACKET(tcpH, tcpS, recvPack.getSourceAddr());
+//			tcpH.setTh_sum(CheckSum.computeChkSum(ackPack));
+//			//回复ACK报文段
+//			reply(ackPack);
+//		}
 		
 		System.out.println();
 		
@@ -104,7 +106,7 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 	//回复ACK报文段
 	public void reply(TCP_PACKET replyPack) {
 		//设置错误控制标志
-		tcpH.setTh_eflag((byte)1);	//eFlag=0，信道无错误
+		tcpH.setTh_eflag((byte)4);	//eFlag=0，信道无错误
 				
 		//发送数据报
 		client.send(replyPack);
