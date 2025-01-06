@@ -60,19 +60,27 @@ public class TCP_Sender extends TCP_Sender_ADT {
 		{
 			int currentAck=ackQueue.poll();
 			// System.out.println("CurrentAck: "+currentAck);
-			if (currentAck == -1)
+			//2.1
+//			if (currentAck == -1)
+//			{
+//				System.out.println("NACK Retransmit: "+tcpPack.getTcpH().getTh_seq());
+//				udt_send(tcpPack);
+//				flag = 0;//继续等待ACK
+//			}
+//			else if (currentAck == -2)
+//			{
+//				System.out.println("WRONG ACK/NACK Retransmit: "+tcpPack.getTcpH().getTh_seq());
+//				System.out.println();	
+//				udt_send(tcpPack);
+//				flag = 0;//继续等待ACK
+//				
+//			}
+			//2.2
+			if (currentAck != tcpPack.getTcpH().getTh_seq())
 			{
-				System.out.println("NACK Retransmit: "+tcpPack.getTcpH().getTh_seq());
-				udt_send(tcpPack);
-				flag = 0;//继续等待ACK
-			}
-			else if (currentAck == -2)
-			{
-				System.out.println("WRONG ACK/NACK Retransmit: "+tcpPack.getTcpH().getTh_seq());
-				System.out.println();	
-				udt_send(tcpPack);
-				flag = 0;//继续等待ACK
-				
+				System.out.println("Retransmit: "+tcpPack.getTcpH().getTh_seq());
+				udt_send(tcpPack);  // 重新发包
+				flag = 0; // 仍然是waitACK状态
 			}
 			else
 			{

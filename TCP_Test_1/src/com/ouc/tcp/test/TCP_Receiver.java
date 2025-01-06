@@ -52,11 +52,12 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 				except_sequence++;
 			}
 		}
-		else{
+		else//数据包错误
+		{
 			System.out.println("Recieve Computed: "+CheckSum.computeChkSum(recvPack));
 			System.out.println("Recieved Packet"+recvPack.getTcpH().getTh_sum());
 			System.out.println("Problem: Packet Number: "+recvPack.getTcpH().getTh_seq()+" + InnerSeq:  "+except_sequence);
-			tcpH.setTh_ack(-1);
+			tcpH.setTh_ack(last_except_sequence);
 			ackPack = new TCP_PACKET(tcpH, tcpS, recvPack.getSourceAddr());
 			tcpH.setTh_sum(CheckSum.computeChkSum(ackPack));
 			//回复ACK报文段
