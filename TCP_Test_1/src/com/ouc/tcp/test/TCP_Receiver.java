@@ -14,8 +14,11 @@ import com.ouc.tcp.tool.TCP_TOOL;
 public class TCP_Receiver extends TCP_Receiver_ADT {
 	
 	private TCP_PACKET ackPack;	//回复的ACK报文段
-	int sequence=1;//用于记录当前待接收的包序号，注意包序号不完全是
+	int except_sequence=1;//用于记录当前待接收的包序号，注意包序号不完全是
 		
+	//2.1用于避免结束重复包
+	int last_except_sequence = 0;//用于记录上一次待接收的包序号
+	
 	/*构造函数*/
 	public TCP_Receiver() {
 		super();	//调用超类构造函数
@@ -26,7 +29,8 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 	//接收到数据报：检查校验和，设置回复的ACK报文段
 	public void rdt_recv(TCP_PACKET recvPack) {
 		//检查校验码，生成ACK
-		if(CheckSum.computeChkSum(recvPack) == recvPack.getTcpH().getTh_sum()) {
+		if(CheckSum.computeChkSum(recvPack) == recvPack.getTcpH().getTh_sum()) 
+		{
 			//生成ACK报文段（设置确认号）
 			tcpH.setTh_ack(recvPack.getTcpH().getTh_seq());
 			ackPack = new TCP_PACKET(tcpH, tcpS, recvPack.getSourceAddr());
@@ -34,14 +38,24 @@ public class TCP_Receiver extends TCP_Receiver_ADT {
 			//回复ACK报文段
 			reply(ackPack);			
 			
-			//将接收到的正确有序的数据插入data队列，准备交付
-			dataQueue.add(recvPack.getTcpS().getData());				
-			sequence++;
+			//2.1
+			int currentSequence = recvPack.getTcpH().getTh_seq();//当前包序号
+			if (currentSequence == this.last_except_sequence) 
+			{  // 收到重复包
+				System.out.println("Duplicate tcpPack: "+recvPack.getTcpH().getTh_seq());
+			}
+			else// 收到新包
+			{
+				this.last_except_sequence = currentSequence;  // 更新上一次接受的seq为本次接受到的包的seq
+				//将接收到的正确有序的数据插入data队列，准备交付
+				dataQueue.add(recvPack.getTcpS().getData());				
+				except_sequence++;
+			}
 		}
 		else{
 			System.out.println("Recieve Computed: "+CheckSum.computeChkSum(recvPack));
 			System.out.println("Recieved Packet"+recvPack.getTcpH().getTh_sum());
-			System.out.println("Problem: Packet Number: "+recvPack.getTcpH().getTh_seq()+" + InnerSeq:  "+sequence);
+			System.out.println("Problem: Packet Number: "+recvPack.getTcpH().getTh_seq()+" + InnerSeq:  "+except_sequence);
 			tcpH.setTh_ack(-1);
 			ackPack = new TCP_PACKET(tcpH, tcpS, recvPack.getSourceAddr());
 			tcpH.setTh_sum(CheckSum.computeChkSum(ackPack));
