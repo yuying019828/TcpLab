@@ -4,10 +4,7 @@
 package com.ouc.tcp.test;
 
 import com.ouc.tcp.client.TCP_Sender_ADT;
-import com.ouc.tcp.client.UDT_RetransTask;
-import com.ouc.tcp.client.UDT_Timer;
-import com.ouc.tcp.message.*;
-import com.ouc.tcp.tool.TCP_TOOL;
+import com.ouc.tcp.message.TCP_PACKET;
 
 public class TCP_Sender extends TCP_Sender_ADT {
 	
@@ -64,7 +61,7 @@ public class TCP_Sender extends TCP_Sender_ADT {
 		/*向窗口中加入包*/
 		try 
 		{
-			this.window.putPacket(this.tcpPack.clone());
+			this.window.PutPacket(this.tcpPack.clone());
 		} 
 		catch (CloneNotSupportedException e) 
 		{

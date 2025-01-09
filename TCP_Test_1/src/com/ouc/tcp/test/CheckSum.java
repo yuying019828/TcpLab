@@ -4,7 +4,6 @@ import java.util.zip.CRC32;
 
 import com.ouc.tcp.message.TCP_HEADER;
 import com.ouc.tcp.message.TCP_PACKET;
-import com.ouc.tcp.message.TCP_SEGMENT;
 
 public class CheckSum 
 {

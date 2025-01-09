@@ -8,8 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import com.ouc.tcp.client.TCP_Receiver_ADT;
-import com.ouc.tcp.message.*;
-import com.ouc.tcp.tool.TCP_TOOL;
+import com.ouc.tcp.message.TCP_PACKET;
 
 public class TCP_Receiver extends TCP_Receiver_ADT {
 	
